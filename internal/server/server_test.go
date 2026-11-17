@@ -25,6 +25,8 @@ func TestSameOrigin(t *testing.T) {
 		{"other site", "https://evil.example", "cross-site", http.StatusForbidden},
 		{"forged origin without fetch metadata", "http://127.0.0.1:6280", "", http.StatusForbidden},
 		{"other port on localhost", "http://127.0.0.1:3000", "same-site", http.StatusForbidden},
+		{"own page behind https proxy", "https://127.0.0.1:6280", "same-origin", http.StatusNoContent},
+		{"other scheme-less origin", "ftp://127.0.0.1:6280", "same-origin", http.StatusForbidden},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -135,5 +137,30 @@ func TestEditDeleteTableAcrossFiles(t *testing.T) {
 	}
 	if !strings.Contains(res.Sources["tenant.hcl"], `table "items"`) {
 		t.Errorf("items removed: %s", res.Sources["tenant.hcl"])
+	}
+}
+
+// 公開しないときは localhost 以外の Host を拒否し、公開するときは受け付ける
+func TestLocalOnlyUnlessPublic(t *testing.T) {
+	for _, c := range []struct {
+		name   string
+		public bool
+		host   string
+		want   int
+	}{
+		{"local", false, "127.0.0.1:6280", http.StatusOK},
+		{"rebinding", false, "evil.example", http.StatusForbidden},
+		{"public", true, "schemap.example.com", http.StatusOK},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			sv := New(nil, fstest.MapFS{"index.html": {Data: []byte("ok")}})
+			sv.Public = c.public
+			r := httptest.NewRequest(http.MethodGet, "http://"+c.host+"/", nil)
+			w := httptest.NewRecorder()
+			sv.Handler().ServeHTTP(w, r)
+			if w.Code != c.want {
+				t.Errorf("status = %d, want %d", w.Code, c.want)
+			}
+		})
 	}
 }

@@ -18,6 +18,7 @@ import (
 	"os/exec"
 	"os/signal"
 	"runtime"
+	"strconv"
 	"strings"
 	"syscall"
 	"time"
@@ -35,7 +36,8 @@ func main() {
 }
 
 func run() error {
-	port := flag.Int("port", 6280, "待ち受けるポート（127.0.0.1 のみ）")
+	host := flag.String("host", "127.0.0.1", "待ち受けるアドレス。0.0.0.0 などにすると localhost 以外からも開ける（コンテナで公開するとき）")
+	port := flag.Int("port", 6280, "待ち受けるポート")
 	noOpen := flag.Bool("no-open", false, "起動時にブラウザを開かない")
 	flag.Usage = func() {
 		fmt.Fprintln(flag.CommandLine.Output(), "使い方: schemap [flags] <ファイルまたはディレクトリ> ...")
@@ -63,12 +65,19 @@ func run() error {
 		return err
 	}
 
-	ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", *port))
+	ln, err := net.Listen("tcp", net.JoinHostPort(*host, strconv.Itoa(*port)))
 	if err != nil {
 		return err
 	}
+	public := !isLoopback(*host)
 	url := fmt.Sprintf("http://127.0.0.1:%d/", *port)
-	srv := &http.Server{Handler: server.New(src, assets).Handler(), ReadHeaderTimeout: 10 * time.Second}
+	if public {
+		// 公開するときは自分のブラウザを開かない
+		*noOpen = true
+	}
+	sv := server.New(src, assets)
+	sv.Public = public
+	srv := &http.Server{Handler: sv.Handler(), ReadHeaderTimeout: 10 * time.Second}
 
 	go func() {
 		<-ctx.Done()
@@ -85,6 +94,15 @@ func run() error {
 		return err
 	}
 	return nil
+}
+
+// isLoopback は、host が自分のマシンからしか届かないアドレスかを返す。
+func isLoopback(host string) bool {
+	if host == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
 }
 
 // parseArgs はフラグとパスを分ける。パスの後ろに置いたフラグも読む

@@ -8,7 +8,7 @@ schemap db/schema/main.hcl              # ファイルを指定する（複数�
 schemap db/schema -port 6281 -no-open   # ポートを変える、ブラウザを開かない（フラグはパスの前後どちらでもよい）
 ```
 
-読むファイルかディレクトリの指定は必須。`127.0.0.1` だけで待ち受ける。
+読むファイルかディレクトリの指定は必須。既定では `127.0.0.1` だけで待ち受ける。`-host 0.0.0.0` のように loopback 以外で待ち受けると、localhost 以外の Host でも開けるようになり、ブラウザも開かない（コンテナで公開するとき）。そのときは誰でも編集して保存できるので、見られても困らないスキーマだけを置く。
 
 ## 入手
 
@@ -17,6 +17,13 @@ schemap db/schema -port 6281 -no-open   # ポートを変える、ブラウザ�
 ```bash
 gh release download -R varu3/schemap -p 'schemap_darwin_arm64.tar.gz'
 tar -xzf schemap_darwin_arm64.tar.gz && ./schemap_darwin_arm64/schemap path/to/db/schema
+```
+
+コンテナイメージ（linux/amd64・linux/arm64）は `ghcr.io/varu3/schemap` にある。何も渡さなければサンプルの EC サイト（`examples/ec`）を開き、8080 番で待ち受ける。
+
+```bash
+docker run --rm -p 8080:8080 ghcr.io/varu3/schemap
+docker run --rm -p 8080:8080 -v "$PWD/db/schema:/home/nonroot/schema" ghcr.io/varu3/schemap schema   # 手元のスキーマを開く
 ```
 
 ## できること・できないこと
@@ -96,7 +103,7 @@ hosted ビルドの画面を直すときは、組み込み先のアプリを起�
 
 ## リリース
 
-`main` に入ると `.github/workflows/release.yml` が 5 プラットフォーム（darwin/arm64・darwin/amd64・linux/amd64・linux/arm64・windows/amd64）向けにビルドし、タグ `vYYYYMMDD-N` で GitHub Release を作る。最新版は次の URL で落とせる。
+`main` に入ると `.github/workflows/release.yml` が 5 プラットフォーム（darwin/arm64・darwin/amd64・linux/amd64・linux/arm64・windows/amd64）向けにビルドし、タグ `vYYYYMMDD-N` で GitHub Release を作る。同じタグと `latest` で、`Dockerfile` から作ったコンテナイメージを `ghcr.io/varu3/schemap` に置く。最新版は次の URL で落とせる。
 
 ```
 https://github.com/varu3/schemap/releases/latest/download/schemap_darwin_arm64.tar.gz

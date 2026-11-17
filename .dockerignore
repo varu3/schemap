@@ -1,0 +1,9 @@
+.git
+.github
+bin
+internal/frontend/node_modules
+internal/frontend/dist-hosted
+internal/frontend/public-hosted
+internal/static/dist
+Dockerfile
+.dockerignore

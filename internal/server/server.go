@@ -18,6 +18,8 @@ import (
 type Server struct {
 	src    *source.Source
 	assets fs.FS
+	// Public が true なら、localhost 以外の Host も受け付ける（コンテナで公開するとき）
+	Public bool
 }
 
 func New(src *source.Source, assets fs.FS) *Server {
@@ -31,6 +33,9 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /_/api/save", sameOrigin(s.save))
 	mux.HandleFunc("POST /_/api/edit", sameOrigin(s.edit))
 	mux.Handle("GET /", http.FileServerFS(s.assets))
+	if s.Public {
+		return mux
+	}
 	return localOnly(mux)
 }
 
@@ -183,9 +188,11 @@ func writeError(w http.ResponseWriter, status int, msg string) {
 
 // sameOrigin は、このサーバー自身の画面から送られたリクエストだけを通す。
 // localhost で待ち受けていても、ブラウザで開いた外部のページから POST できてしまうため。
+// HTTPS で終端するプロキシの後ろに置いたときは、Origin が https:// になる。
 func sameOrigin(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("Sec-Fetch-Site") != "same-origin" || r.Header.Get("Origin") != "http://"+r.Host {
+		origin := r.Header.Get("Origin")
+		if r.Header.Get("Sec-Fetch-Site") != "same-origin" || (origin != "http://"+r.Host && origin != "https://"+r.Host) {
 			writeError(w, http.StatusForbidden, "forbidden")
 			return
 		}
