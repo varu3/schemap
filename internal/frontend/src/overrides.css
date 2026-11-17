@@ -1,0 +1,55 @@
+/* className を付けられない外部ライブラリの DOM だけを上書きする（React Flow） */
+
+/* マーカーの定義だけを置く SVG。画面には出さない */
+.schemap-markers {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* テーブルの接続点。ふだんは見せず、列の行にマウスを乗せたとき（と FK を引いている間）だけ出す。
+   右の点から相手の列の左の点まで引くと FK になる */
+.react-flow__node .react-flow__handle {
+  width: 10px;
+  height: 10px;
+  min-width: 0;
+  min-height: 0;
+  border: 2px solid #fff;
+  background: var(--app-accent);
+  opacity: 0;
+}
+
+/* 列の接続点は枠の内側に置く。枠をまたぐと外側の半分が切れて掴めないため */
+.erd-row > .react-flow__handle-right {
+  right: 2px;
+  transform: translate(0, -50%);
+}
+
+.erd-row > .react-flow__handle-left {
+  left: 2px;
+  transform: translate(0, -50%);
+}
+
+.erd-row:hover > .react-flow__handle-right,
+.erd-connecting .erd-row > .react-flow__handle-left {
+  opacity: 1;
+}
+
+/* 選んだテーブルにつながる線は青で示す（Markers.tsx の selected と同じ色） */
+.react-flow__edge.edge-selected path {
+  stroke: #0969da;
+  stroke-width: 2.5;
+}
+
+/* 押して選んだ線（Delete で消す対象）は、選んだテーブルの線より太くする */
+.react-flow__edge.edge-picked path {
+  stroke-width: 4;
+}
+
+.react-flow__controls,
+.react-flow__minimap {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 1px 2px rgb(0 0 0 / 5%);
+}

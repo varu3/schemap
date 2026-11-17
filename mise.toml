@@ -1,0 +1,35 @@
+[tools]
+node = "22.23.4"
+go = "1.27.3"
+pnpm = "10.10.0"
+
+[tasks.build]
+description = "画面をビルドして取り込み、bin/schemap を作る"
+run = """
+go generate ./internal/static
+go build -o bin/schemap .
+"""
+
+[tasks.build-hosted]
+description = "ほかのアプリに組み込む形（WASM と画面）を internal/frontend/dist-hosted に作る"
+run = """
+mkdir -p internal/frontend/public-hosted
+GOOS=js GOARCH=wasm go build -trimpath -ldflags "-s -w" -o internal/frontend/public-hosted/schemap.wasm ./cmd/wasm
+cp "$(go env GOROOT)/lib/wasm/wasm_exec.js" internal/frontend/public-hosted/
+cd internal/frontend && pnpm install --frozen-lockfile && pnpm run build:hosted
+"""
+
+[tasks.start]
+description = "ビルドして起動する。読むファイルかディレクトリを引数で渡す（例: mise run start -- path/to/db/schema）"
+depends = ["build"]
+# 引数の相対パスは mise を実行した場所から解決する
+run = 'cd "$MISE_ORIGINAL_CWD" && "{{config_root}}/bin/schemap"'
+
+[tasks.test]
+description = "Go のテストと画面の lint"
+run = """
+go vet ./...
+GOOS=js GOARCH=wasm go vet ./cmd/wasm
+go test ./...
+cd internal/frontend && pnpm run lint
+"""

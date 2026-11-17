@@ -1,0 +1,9 @@
+node_modules/
+# 画面のビルド結果（go generate で作る）とバイナリ
+internal/static/dist/
+bin/
+build/
+dist/
+# hosted ビルド（mise run build-hosted）の結果と、そこに並べる WASM
+internal/frontend/dist-hosted/
+internal/frontend/public-hosted/
