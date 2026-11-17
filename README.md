@@ -71,6 +71,7 @@ Go のバイナリ 1 つに画面を取り込む（構成は [k1LoW/mo](https://
 | `internal/server` | 画面の配信と API（`GET /_/api/schema`、編集中の中身で解析し直す `POST /_/api/schema`、保存の `POST /_/api/save`、図の上の操作を順に当てる `POST /_/api/edit`）。POST は自分の画面からのものだけ受け付ける |
 | `internal/static` | 画面のビルド結果を `embed` で取り込む |
 | `internal/frontend` | 画面（React + TypeScript + React Flow + dagre + CodeMirror、shadcn/ui + Tailwind CSS、Vite でビルド） |
+| `examples/ec` | サンプルの EC サイトのスキーマ（商品・会員・注文の 17 テーブル）。`mise run start` を引数なしで実行すると開く |
 | `internal/frontend/src/hosted` | hosted ビルドだけが使う部分（組み込み先の API、WASM を動かす Worker、ブランチの切り替えと PR の作成）。ローカルのビルドには入らない |
 
 画面の部品は shadcn/ui で、テーマ（色・角丸・ダーク）は shadcn/ui の neutral に、図で使う色（`src/colors.css`）を足したものを `internal/frontend/src/index.css` に置いている。部品は `src/components/ui/` に置く。className を付けられない React Flow の DOM だけを `src/overrides.css` で上書きする。
@@ -82,7 +83,8 @@ Go のバイナリ 1 つに画面を取り込む（構成は [k1LoW/mo](https://
 ツールの版は `mise.toml` にある。
 
 ```bash
-mise run start -- path/to/db/schema    # ビルドして起動
+mise run start                         # ビルドして起動。パスを渡さなければサンプルの EC サイト（examples/ec）を開く
+mise run start -- path/to/db/schema    # 読むファイルかディレクトリを渡す
 mise run test                          # go vet・go test・Biome
 
 # 画面だけ直すとき: Go のサーバーを起動したまま Vite の開発サーバーを使う

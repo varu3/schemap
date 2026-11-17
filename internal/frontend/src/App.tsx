@@ -1595,7 +1595,7 @@ export function App() {
             snapGrid={[GRID, GRID]}
             proOptions={{ hideAttribution: true }}
           >
-            <Background variant={BackgroundVariant.Lines} gap={GRID} color="var(--app-gray-3)" />
+            <Background variant={BackgroundVariant.Lines} gap={GRID} color="var(--app-grid)" />
             <Markers />
             <Panel position="top-left">
               <div className="flex items-center gap-1 rounded-lg border bg-background p-1 shadow-sm">

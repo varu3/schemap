@@ -20,10 +20,27 @@ cd internal/frontend && pnpm install --frozen-lockfile && pnpm run build:hosted
 """
 
 [tasks.start]
-description = "ビルドして起動する。読むファイルかディレクトリを引数で渡す（例: mise run start -- path/to/db/schema）"
+description = "ビルドして起動する。読むファイルかディレクトリを引数で渡す（例: mise run start -- path/to/db/schema）。渡さなければ examples/ec を開く"
 depends = ["build"]
-# 引数の相対パスは mise を実行した場所から解決する
-run = 'cd "$MISE_ORIGINAL_CWD" && "{{config_root}}/bin/schemap"'
+# mise は引数を最後の行の後ろに足すので、関数 start の引数として受ける。
+# 引数の相対パスは mise を実行した場所から解決する。パスがなければ（フラグだけでも）サンプルの EC サイトを開く
+run = """
+start() {
+  cd "$MISE_ORIGINAL_CWD" || exit 1
+  has_path=false
+  skip=false
+  for a in "$@"; do
+    if $skip; then skip=false; continue; fi
+    case "$a" in
+      -port|--port) skip=true ;;
+      -*) ;;
+      *) has_path=true ;;
+    esac
+  done
+  $has_path || set -- "$@" "{{config_root}}/examples/ec"
+  exec "{{config_root}}/bin/schemap" "$@"
+}
+start"""
 
 [tasks.test]
 description = "Go のテストと画面の lint"
